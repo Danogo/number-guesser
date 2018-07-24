@@ -2,7 +2,7 @@
 let winningNum,
     minVal,
     maxVal,
-    guessesLeft = 3;
+    guessesLeft;
 
 // UI elements
 const game = document.querySelector('#game'),
@@ -17,14 +17,21 @@ const game = document.querySelector('#game'),
 guessBtn.addEventListener('click', checkGuess);
 
 // Listen for range change
-minNum.addEventListener('change', pickWinNum);
-maxNum.addEventListener('change', pickWinNum);
+minNum.addEventListener('change', resetSettings);
+maxNum.addEventListener('change', resetSettings);
+
+// Listen for play again click
+game.addEventListener('mousedown', event => {
+  if(event.target.className === 'play-again') {
+    window.location.reload();
+  }
+});
 
 // Pick initial winning number
-pickWinNum();
+resetSettings();
 
 // Pick random winning number within set range
-function pickWinNum() {
+function resetSettings() {
   // Grab values from inputs and convert them to numbers
   minVal = parseInt(minNum.value);
   maxVal = parseInt(maxNum.value);
@@ -33,11 +40,18 @@ function pickWinNum() {
     setMessage('Please set minimum and maxium correctly! Minimum value should be less than maximum value.', 'orange');
     return;
   }
-  // Pick random number
-  let min = Math.ceil(minVal);
-  let max = Math.floor(maxVal);
-  winningNum = Math.floor(Math.random() * (max - min + 1)) + min;
-  console.log(winningNum);
+  
+  // Set winning number
+  winningNum = pickRandomNum(minVal, maxVal);
+  // Set guesses left to 3
+  guessesLeft = 3;
+}
+
+// Pick random number
+function pickRandomNum(min, max) {
+ min = Math.ceil(min);
+ max = Math.floor(max);
+ return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 // Check if user guessed a number
@@ -47,7 +61,7 @@ function checkGuess() {
   // Validate input
   // First check if isNaN, then if is less then min and greater then max
   if (guess !== guess || guess < minVal || guess > maxVal) {
-    setMessage(`Please enter a number between ${minVal} and ${maxVal}.`, 'red');
+    setMessage(`Please enter a number between ${minVal} and ${maxVal}. You have ${guessesLeft} guesses left`, 'red');
     return;
   }
 
@@ -65,8 +79,9 @@ function checkGuess() {
       // Game continues - answer wrong
       // Clear input
       guessInput.value = '';
+      let isWhat = guess > winningNum ? 'high' : 'low';
       // Tell user it's the wrong number
-      setMessage(`${guess} is not correct. ${guessesLeft} guesses left.`, 'orange');
+      setMessage(`${guess} is not correct. Your number was too ${isWhat}. ${guessesLeft} guesses left.`, 'orange');
     }
   }
 }
@@ -91,4 +106,8 @@ function gameOver(won, msg) {
   let color = won ? 'green' : 'red';
   paintResult(color);
   setMessage(msg, color);
+  guessBtn.value = 'Play Again';
+  guessBtn.className += 'play-again';
+  minNum.disabled = true;
+  maxNum.disabled = true;
 }
